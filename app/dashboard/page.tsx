@@ -126,7 +126,7 @@ export default async function DashboardPage() {
               <p className="text-sm text-gray-500 text-center py-4">No recent alarms</p>
             ) : (
               <div className="space-y-3">
-                {data.recentAlarms.map((alarm) => (
+                {data.recentAlarms.map((alarm: any) => (
                   <div
                     key={alarm.id}
                     className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
@@ -168,7 +168,7 @@ export default async function DashboardPage() {
               <p className="text-sm text-gray-500 text-center py-4">No recent ONTs</p>
             ) : (
               <div className="space-y-3">
-                {data.recentONTs.map((ont) => (
+                {data.recentONTs.map((ont: any) => (
                   <div
                     key={ont.id}
                     className="flex items-start gap-3 p-3 rounded-lg bg-gray-50 dark:bg-gray-800"
