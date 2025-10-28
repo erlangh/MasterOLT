@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  OPERATOR
+  VIEWER
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum DeviceStatus {
+  ONLINE
+  OFFLINE
+  MAINTENANCE
+  ERROR
+}
+
+enum OntStatus {
+  ONLINE
+  OFFLINE
+  LOS
+  POWER_OFF
+  PENDING
+}
+
+enum AlarmSeverity {
+  CRITICAL
+  WARNING
+  INFO
+}
+
+enum AlarmStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  RESOLVED
+}
+
+model User {
+  id            String       @id @default(cuid())
+  email         String       @unique
+  password      String
+  name          String
+  role          UserRole     @default(VIEWER)
+  status        UserStatus   @default(ACTIVE)
+  lastLogin     DateTime?
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  
+  activityLogs  ActivityLog[]
+  reports       Report[]
+  
+  @@index([email])
+}
+
+model OLT {
+  id              String        @id @default(cuid())
+  name            String
+  ipAddress       String        @unique
+  model           String
+  vendor          String
+  location        String
+  status          DeviceStatus  @default(OFFLINE)
+  firmwareVersion String?
+  totalPorts      Int           @default(16)
+  description     String?
+  latitude        Float?
+  longitude       Float?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  onts            ONT[]
+  alarms          Alarm[]
+  
+  @@index([ipAddress])
+  @@index([status])
+}
+
+model ONT {
+  id              String        @id @default(cuid())
+  serialNumber    String        @unique
+  macAddress      String?       @unique
+  oltId           String
+  olt             OLT           @relation(fields: [oltId], references: [id], onDelete: Cascade)
+  port            Int
+  status          OntStatus     @default(PENDING)
+  signalStrength  Float?
+  rxPower         Float?
+  txPower         Float?
+  distance        Float?
+  customerName    String?
+  customerPhone   String?
+  customerEmail   String?
+  address         String?
+  servicePackage  String?
+  installDate     DateTime?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  
+  alarms          Alarm[]
+  
+  @@index([oltId])
+  @@index([status])
+  @@index([serialNumber])
+}
+
+model ActivityLog {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  action      String
+  entityType  String
+  entityId    String?
+  details     String?
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime  @default(now())
+  
+  @@index([userId])
+  @@index([createdAt])
+  @@index([entityType])
+}
+
+model Alarm {
+  id          String          @id @default(cuid())
+  deviceType  String
+  oltId       String?
+  olt         OLT?            @relation(fields: [oltId], references: [id], onDelete: Cascade)
+  ontId       String?
+  ont         ONT?            @relation(fields: [ontId], references: [id], onDelete: Cascade)
+  severity    AlarmSeverity
+  message     String
+  description String?
+  status      AlarmStatus     @default(ACTIVE)
+  createdAt   DateTime        @default(now())
+  resolvedAt  DateTime?
+  resolvedBy  String?
+  notes       String?
+  
+  @@index([status])
+  @@index([severity])
+  @@index([createdAt])
+}
+
+model Report {
+  id            String    @id @default(cuid())
+  type          String
+  title         String
+  generatedBy   String
+  user          User      @relation(fields: [generatedBy], references: [id], onDelete: Cascade)
+  parameters    String?
+  filePath      String?
+  fileUrl       String?
+  status        String    @default("COMPLETED")
+  createdAt     DateTime  @default(now())
+  
+  @@index([generatedBy])
+  @@index([createdAt])
+}
+
+model SystemConfig {
+  id          String    @id @default(cuid())
+  key         String    @unique
+  value       String
+  description String?
+  updatedAt   DateTime  @updatedAt
+  
+  @@index([key])
+}

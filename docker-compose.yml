@@ -1,0 +1,42 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: smartolt-postgres
+    restart: always
+    environment:
+      POSTGRES_USER: smartolt
+      POSTGRES_PASSWORD: smartolt123
+      POSTGRES_DB: smartolt_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - smartolt-network
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: smartolt-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://smartolt:smartolt123@postgres:5432/smartolt_db?schema=public"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "your-secret-key-change-this-in-production-min-32-chars"
+      NODE_ENV: "production"
+    depends_on:
+      - postgres
+    networks:
+      - smartolt-network
+
+networks:
+  smartolt-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
