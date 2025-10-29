@@ -149,3 +149,33 @@ docker-compose logs -f postgres
 # Logs semua services
 docker-compose logs -f
 ```
+
+## Windows + SQLite (Local Development)
+
+Jika menggunakan Prisma dengan provider `sqlite` dan menjalankan Next.js build `output: standalone`:
+
+- Gunakan `DATABASE_URL` dengan path absolut berawalan `file:` agar Prisma selalu menemukan file DB:
+
+```
+DATABASE_URL="file:C:/Users/FREEDOM/.trae/.github/MasterOLT/prisma/dev.db"
+```
+
+- Jalankan server standalone dengan environment variable yang disetel eksplisit:
+
+```
+$env:DATABASE_URL='file:C:/Users/FREEDOM/.trae/.github/MasterOLT/prisma/dev.db'
+$env:PORT=3005
+node .next/standalone/server.js
+```
+
+- Sinkronkan schema Prisma ke SQLite jika tabel belum ada:
+
+```
+npx prisma db push
+```
+
+- Seed data contoh (opsional, membutuhkan `ts-node`):
+
+```
+npx ts-node prisma/seed.ts
+```
