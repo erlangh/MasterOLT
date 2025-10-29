@@ -1,12 +1,80 @@
+"use client"
+
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Settings as SettingsIcon, Bell, Shield, Database, Mail } from "lucide-react"
+import { useState, useEffect } from "react"
+import { useSession } from "next-auth/react"
 
-export const dynamic = 'force-dynamic'
+export default function SettingsPage() {
+  const { data: session } = useSession()
+  const [settings, setSettings] = useState({
+    company_name: '',
+    timezone: 'Asia/Jakarta',
+    language: 'English',
+    snmp_community: '',
+    snmp_version: 'v2c',
+    snmp_polling_interval: '300',
+    smtp_server: '',
+    smtp_port: '587',
+    smtp_email: '',
+    smtp_password: '',
+    session_timeout: '30',
+    password_policy: 'Minimum 8 characters'
+  })
+  const [loading, setLoading] = useState(true)
+  const [saving, setSaving] = useState(false)
 
-export default async function SettingsPage() {
+  useEffect(() => {
+    fetchSettings()
+  }, [])
+
+  const fetchSettings = async () => {
+    try {
+      const response = await fetch('/api/settings')
+      if (response.ok) {
+        const data = await response.json()
+        setSettings(prev => ({ ...prev, ...data }))
+      }
+    } catch (error) {
+      console.error('Error fetching settings:', error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleInputChange = (key: string, value: string) => {
+    setSettings(prev => ({ ...prev, [key]: value }))
+  }
+
+  const handleSave = async (section: string) => {
+    setSaving(true)
+    try {
+      const response = await fetch('/api/settings', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(settings),
+      })
+
+      if (response.ok) {
+        alert(`${section} settings saved successfully!`)
+      } else {
+        alert('Error saving settings')
+      }
+    } catch (error) {
+      console.error('Error saving settings:', error)
+      alert('Error saving settings')
+    } finally {
+      setSaving(false)
+    }
+  }
+
+  if (loading) {
+    return <div className="flex justify-center items-center h-64">Loading settings...</div>
+  }
+
   return (
     <div className="space-y-6">
       <div>
@@ -31,19 +99,34 @@ export default async function SettingsPage() {
               <Label htmlFor="company-name">Company Name</Label>
               <Input
                 id="company-name"
+                value={settings.company_name}
+                onChange={(e) => handleInputChange('company_name', e.target.value)}
                 placeholder="SmartOLT Management"
-                defaultValue="SmartOLT Management"
               />
             </div>
             <div className="space-y-2">
               <Label htmlFor="timezone">Timezone</Label>
-              <Input id="timezone" defaultValue="Asia/Jakarta" />
+              <Input 
+                id="timezone" 
+                value={settings.timezone}
+                onChange={(e) => handleInputChange('timezone', e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="language">Language</Label>
-              <Input id="language" defaultValue="English" />
+              <Input 
+                id="language" 
+                value={settings.language}
+                onChange={(e) => handleInputChange('language', e.target.value)}
+              />
             </div>
-            <Button className="w-full">Save Changes</Button>
+            <Button 
+              className="w-full" 
+              onClick={() => handleSave('General')}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save Changes'}
+            </Button>
           </CardContent>
         </Card>
 
@@ -161,17 +244,34 @@ export default async function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>Community String</Label>
-              <Input type="password" defaultValue="public" />
+              <Input 
+                type="password" 
+                value={settings.snmp_community}
+                onChange={(e) => handleInputChange('snmp_community', e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>SNMP Version</Label>
-              <Input defaultValue="v2c" />
+              <Input 
+                value={settings.snmp_version}
+                onChange={(e) => handleInputChange('snmp_version', e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>Polling Interval (seconds)</Label>
-              <Input type="number" defaultValue="300" />
+              <Input 
+                type="number" 
+                value={settings.snmp_polling_interval}
+                onChange={(e) => handleInputChange('snmp_polling_interval', e.target.value)}
+              />
             </div>
-            <Button className="w-full">Save SNMP Settings</Button>
+            <Button 
+              className="w-full"
+              onClick={() => handleSave('SNMP')}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Save SNMP Settings'}
+            </Button>
           </CardContent>
         </Card>
 
@@ -187,21 +287,44 @@ export default async function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label>SMTP Server</Label>
-              <Input placeholder="smtp.gmail.com" />
+              <Input 
+                placeholder="smtp.gmail.com"
+                value={settings.smtp_server}
+                onChange={(e) => handleInputChange('smtp_server', e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>SMTP Port</Label>
-              <Input type="number" defaultValue="587" />
+              <Input 
+                type="number" 
+                value={settings.smtp_port}
+                onChange={(e) => handleInputChange('smtp_port', e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>Email Address</Label>
-              <Input type="email" placeholder="alerts@smartolt.com" />
+              <Input 
+                type="email" 
+                placeholder="alerts@smartolt.com"
+                value={settings.smtp_email}
+                onChange={(e) => handleInputChange('smtp_email', e.target.value)}
+              />
             </div>
             <div className="space-y-2">
               <Label>Password</Label>
-              <Input type="password" />
+              <Input 
+                type="password"
+                value={settings.smtp_password}
+                onChange={(e) => handleInputChange('smtp_password', e.target.value)}
+              />
             </div>
-            <Button className="w-full">Test & Save</Button>
+            <Button 
+              className="w-full"
+              onClick={() => handleSave('Email')}
+              disabled={saving}
+            >
+              {saving ? 'Saving...' : 'Test & Save'}
+            </Button>
           </CardContent>
         </Card>
       </div>

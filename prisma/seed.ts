@@ -80,9 +80,91 @@ async function main() {
 
   console.log('✓ Created OLT:', olt2.name)
 
+  // Create sample ODPs
+  const odp1 = await prisma.oDP.upsert({
+    where: { name: 'ODP - Jakarta Pusat' },
+    update: {},
+    create: {
+      name: 'ODP - Jakarta Pusat',
+      latitude: -6.2088,
+      longitude: 106.8456,
+      location: 'Jakarta Pusat',
+      oltId: olt1.id,
+      status: 'ONLINE',
+    },
+  })
+
+  console.log('✓ Created ODP:', odp1.name)
+
+  const odp2 = await prisma.oDP.upsert({
+    where: { name: 'ODP - Sudirman' },
+    update: {},
+    create: {
+      name: 'ODP - Sudirman',
+      latitude: -6.223,
+      longitude: 106.85,
+      location: 'Sudirman, Jakarta',
+      oltId: olt1.id,
+      status: 'ONLINE',
+    },
+  })
+
+  console.log('✓ Created ODP:', odp2.name)
+
+  const odp3 = await prisma.oDP.upsert({
+    where: { name: 'ODP - Bandung' },
+    update: {},
+    create: {
+      name: 'ODP - Bandung',
+      latitude: -6.9175,
+      longitude: 107.6191,
+      location: 'Bandung',
+      oltId: olt2.id,
+      status: 'ONLINE',
+    },
+  })
+
+  console.log('✓ Created ODP:', odp3.name)
+
+  // Create sample Cable Routes
+  const routeJakarta = await prisma.cableRoute.upsert({
+    where: { name: 'Route Jakarta Central' },
+    update: {},
+    create: {
+      name: 'Route Jakarta Central',
+      description: 'Fiber route from OLT Jakarta to ODPs Sudirman & Kuningan',
+      color: '#16a34a',
+      points: [
+        { lat: -6.2088, lng: 106.8456, label: 'OLT Jakarta' },
+        { lat: -6.223, lng: 106.85, label: 'ODP Sudirman' },
+        { lat: -6.2305, lng: 106.86, label: 'ODP Kuningan' },
+      ],
+    },
+  })
+
+  console.log('✓ Created Cable Route:', routeJakarta.name)
+
+  const routeBandung = await prisma.cableRoute.upsert({
+    where: { name: 'Route Bandung City' },
+    update: {},
+    create: {
+      name: 'Route Bandung City',
+      description: 'Fiber route from OLT Bandung to ODP Braga',
+      color: '#dc2626',
+      points: [
+        { lat: -6.9175, lng: 107.6191, label: 'OLT Bandung' },
+        { lat: -6.905, lng: 107.61, label: 'ODP Braga' },
+      ],
+    },
+  })
+
+  console.log('✓ Created Cable Route:', routeBandung.name)
+
   // Create sample ONTs
-  const ont1 = await prisma.oNT.create({
-    data: {
+  const ont1 = await prisma.oNT.upsert({
+    where: { serialNumber: 'HWTC12345678' },
+    update: {},
+    create: {
       serialNumber: 'HWTC12345678',
       macAddress: '00:11:22:33:44:55',
       oltId: olt1.id,
@@ -104,8 +186,10 @@ async function main() {
 
   console.log('✓ Created ONT:', ont1.serialNumber)
 
-  const ont2 = await prisma.oNT.create({
-    data: {
+  const ont2 = await prisma.oNT.upsert({
+    where: { serialNumber: 'HWTC87654321' },
+    update: {},
+    create: {
       serialNumber: 'HWTC87654321',
       macAddress: '00:11:22:33:44:56',
       oltId: olt1.id,
@@ -127,8 +211,10 @@ async function main() {
 
   console.log('✓ Created ONT:', ont2.serialNumber)
 
-  const ont3 = await prisma.oNT.create({
-    data: {
+  const ont3 = await prisma.oNT.upsert({
+    where: { serialNumber: 'ZTEC11111111' },
+    update: {},
+    create: {
       serialNumber: 'ZTEC11111111',
       macAddress: '00:11:22:33:44:57',
       oltId: olt2.id,

@@ -52,6 +52,16 @@ const menuItems = [
     icon: FileText,
   },
   {
+    title: "ODPS",
+    href: "/dashboard/odps",
+    icon: Server,
+  },
+  {
+    title: "Cable Routes",
+    href: "/dashboard/cable-routes",
+    icon: Activity,
+  },
+  {
     title: "Settings",
     href: "/dashboard/settings",
     icon: Settings,

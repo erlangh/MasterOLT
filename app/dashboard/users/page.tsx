@@ -1,4 +1,6 @@
-import { prisma } from "@/lib/prisma"
+'use client'
+
+import { useState, useEffect } from 'react'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,26 +15,59 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
-export const dynamic = 'force-dynamic'
-
-async function getUsers() {
-  const users = await prisma.user.findMany({
-    orderBy: { createdAt: "desc" },
-    select: {
-      id: true,
-      email: true,
-      name: true,
-      role: true,
-      status: true,
-      lastLogin: true,
-      createdAt: true,
-    },
-  })
-  return users
+interface User {
+  id: string
+  email: string
+  name: string
+  role: string
+  status: string
+  lastLogin: Date | null
+  createdAt: Date
 }
 
-export default async function UsersPage() {
-  const users = await getUsers()
+export default function UsersPage() {
+  const [users, setUsers] = useState<User[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      const response = await fetch('/api/users')
+      if (response.ok) {
+        const data = await response.json()
+        setUsers(data)
+      }
+    } catch (error) {
+      console.error('Error fetching users:', error)
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDelete = async (userId: string, userName: string) => {
+    if (!confirm(`Are you sure you want to delete user "${userName}"?`)) {
+      return
+    }
+
+    try {
+      const response = await fetch(`/api/users/${userId}`, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        setUsers(users.filter(user => user.id !== userId))
+      } else {
+        const error = await response.json()
+        alert(`Failed to delete user: ${error.message}`)
+      }
+    } catch (error) {
+      console.error('Error deleting user:', error)
+      alert('Failed to delete user')
+    }
+  }
 
   const getRoleBadge = (role: string) => {
     const colors: Record<string, string> = {
@@ -73,8 +108,13 @@ export default async function UsersPage() {
           <CardTitle>All Users ({users.length})</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            <Table>
+          {isLoading ? (
+            <div className="flex items-center justify-center py-8">
+              <div className="text-lg">Loading users...</div>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <Table>
               <TableHeader>
                 <TableRow>
                   <TableHead>Name</TableHead>
@@ -115,7 +155,12 @@ export default async function UsersPage() {
                               <Edit className="w-4 h-4" />
                             </Button>
                           </Link>
-                          <Button variant="ghost" size="icon" className="text-red-600">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="text-red-600"
+                            onClick={() => handleDelete(user.id, user.name)}
+                          >
                             <Trash2 className="w-4 h-4" />
                           </Button>
                         </div>
@@ -125,7 +170,8 @@ export default async function UsersPage() {
                 )}
               </TableBody>
             </Table>
-          </div>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

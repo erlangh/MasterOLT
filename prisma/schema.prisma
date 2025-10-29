@@ -6,7 +6,7 @@ generator client {
 }
 
 datasource db {
-  provider = "postgresql"
+  provider = "sqlite"
   url      = env("DATABASE_URL")
 }
 
@@ -83,6 +83,7 @@ model OLT {
   updatedAt       DateTime      @updatedAt
   
   onts            ONT[]
+  odps            ODP[]
   alarms          Alarm[]
   
   @@index([ipAddress])
@@ -116,6 +117,31 @@ model ONT {
   @@index([oltId])
   @@index([status])
   @@index([serialNumber])
+}
+
+model ODP {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  latitude  Float
+  longitude Float
+  location  String?
+  oltId     String?
+  olt       OLT?     @relation(fields: [oltId], references: [id], onDelete: SetNull)
+  status    DeviceStatus @default(ONLINE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([oltId])
+  @@index([status])
+}
+
+model CableRoute {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  color       String?
+  points      Json
+  createdAt   DateTime @default(now())
 }
 
 model ActivityLog {
