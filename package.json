@@ -6,7 +6,7 @@
     "dev": "next dev --webpack",
     "build": "next build --webpack",
     "start": "next start",
-    "start:standalone": "cross-env-shell DATABASE_URL=\"file:%CD%\\prisma\\dev.db\" PORT=3005 node .next/standalone/server.js",
+    "start:standalone": "node .next/standalone/server.js",
     "lint": "eslint",
     "prisma:generate": "prisma generate",
     "prisma:push": "prisma db push",
