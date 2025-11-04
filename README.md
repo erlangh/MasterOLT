@@ -6,6 +6,9 @@ Aplikasi web management untuk OLT (Optical Line Terminal) yang komprehensif deng
 ![Next.js](https://img.shields.io/badge/Next.js-16.0-black)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.0-blue)
 ![Prisma](https://img.shields.io/badge/Prisma-ORM-brightgreen)
+![CI](https://github.com/erlangh/smartolt-app/actions/workflows/ci.yml/badge.svg)
+![Docker](https://github.com/erlangh/smartolt-app/actions/workflows/docker.yml/badge.svg)
+![GHCR](https://img.shields.io/badge/GHCR-smartolt--app-blue?logo=docker)
 
 ## 🚀 Fitur Utama
 
@@ -141,6 +144,44 @@ docker-compose exec app npm run prisma:seed
 5. **Akses aplikasi**
 ```
 http://localhost:3000
+```
+
+## 🐳 Docker Image (GHCR)
+
+Anda dapat menarik image yang dibangun otomatis oleh GitHub Actions dari GitHub Container Registry (GHCR):
+
+```bash
+docker pull ghcr.io/erlangh/smartolt-app:latest
+
+# Menjalankan container dengan environment minimal
+docker run -d \
+  -p 3000:3000 \
+  -e DATABASE_URL="postgresql://smartolt:smartolt123@localhost:5432/smartolt_db?schema=public" \
+  -e NEXTAUTH_URL="http://localhost:3000" \
+  -e NEXTAUTH_SECRET="change-me-in-production-min-32-chars" \
+  --name smartolt-app \
+  ghcr.io/erlangh/smartolt-app:latest
+```
+
+Menggunakan GHCR di `docker-compose.yml` (opsional, ganti blok `build:` dengan `image:`):
+
+```yaml
+  app:
+    image: ghcr.io/erlangh/smartolt-app:latest
+    container_name: smartolt-app
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      DATABASE_URL: "postgresql://smartolt:smartolt123@postgres:5432/smartolt_db?schema=public"
+      NEXTAUTH_URL: "http://localhost:3000"
+      NEXTAUTH_SECRET: "your-secret-key-change-this-in-production-min-32-chars"
+      NODE_ENV: "production"
+    depends_on:
+      postgres:
+        condition: service_started
+    networks:
+      - smartolt-network
 ```
 
 ## 🔐 Default Credentials
