@@ -9,6 +9,7 @@ Aplikasi web management untuk OLT (Optical Line Terminal) yang komprehensif deng
 ![CI](https://github.com/erlangh/smartolt-app/actions/workflows/ci.yml/badge.svg)
 ![Docker](https://github.com/erlangh/smartolt-app/actions/workflows/docker.yml/badge.svg)
 ![GHCR](https://img.shields.io/badge/GHCR-smartolt--app-blue?logo=docker)
+![Release](https://img.shields.io/github/v/tag/erlangh/smartolt-app?label=release)
 
 ## 🚀 Fitur Utama
 
@@ -182,6 +183,31 @@ Menggunakan GHCR di `docker-compose.yml` (opsional, ganti blok `build:` dengan `
         condition: service_started
     networks:
       - smartolt-network
+```
+
+## 🏷️ Release & Versioning
+
+Rilis otomatis berbasis tag semver:
+
+- Buat dan push tag semver (format `vX.Y.Z`), contoh:
+
+```bash
+git tag v1.0.0
+git push origin v1.0.0
+```
+
+- Workflow rilis akan:
+  - Build aplikasi dan generate Prisma client
+  - Build & push image Docker ke GHCR dengan tag `vX.Y.Z` dan `latest`
+  - Membuat GitHub Release untuk tag tersebut
+
+Menggunakan image versi tertentu di `docker-compose.yml`:
+
+```yaml
+services:
+  web:
+    image: ghcr.io/erlangh/smartolt-app:v1.0.0
+    # ... konfigurasi lain sama seperti di atas
 ```
 
 ## 🔐 Default Credentials
