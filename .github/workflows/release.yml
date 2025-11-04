@@ -28,7 +28,7 @@ jobs:
       - name: Generate Prisma Client
         run: npx prisma generate
         env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/postgres
+          DATABASE_URL: file:./prisma/dev.db
 
       - name: Build app
         run: npm run build
@@ -56,8 +56,8 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/${{ github.repository }}/smartolt-app:${{ steps.version.outputs.tag }}
-            ghcr.io/${{ github.repository }}/smartolt-app:latest
+            ghcr.io/${{ github.repository }}:${{ steps.version.outputs.tag }}
+            ghcr.io/${{ github.repository }}:latest
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
