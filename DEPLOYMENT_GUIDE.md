@@ -264,7 +264,27 @@ pm2 startup windows  # Jalankan sebagai Administrator
    # Edit .env sesuai kebutuhan production
    ```
 
-2. Gunakan image dari GHCR di `docker-compose.yml` (ganti blok `build:` dengan `image:` jika perlu)
+2. Opsi A (Default saat ini): SQLite dengan volume persistensi
+   
+   Gunakan file `docker-compose.prod.yml` yang disertakan, lalu jalankan:
+   ```bash
+   docker-compose -f docker-compose.prod.yml up -d
+   ```
+
+   Ini akan:
+   - Menjalankan container menggunakan image dari GHCR
+   - Menggunakan SQLite (`prisma/dev.db`) dengan volume host `./data/dev.db`
+   - Mengaktifkan healthcheck ke endpoint `/api/health`
+
+   Inisialisasi database (pertama kali):
+   ```bash
+   docker-compose -f docker-compose.prod.yml exec app npx prisma db push
+   docker-compose -f docker-compose.prod.yml exec app npm run prisma:seed
+   ```
+
+3. Opsi B (Eksperimental): PostgreSQL
+   
+   Jika ingin menggunakan PostgreSQL, contoh konfigurasi ada di `docker-compose.yml`:
    ```yaml
    services:
      app:
@@ -285,12 +305,17 @@ pm2 startup windows  # Jalankan sebagai Administrator
          - smartolt-network
    ```
 
-3. Jalankan aplikasi
+   Catatan penting:
+   - Saat ini `schema.prisma` menggunakan `provider = "sqlite"`
+   - Untuk benar-benar menggunakan PostgreSQL, perlu migrasi skema dan mengganti provider Prisma ke `postgresql`
+   - Jika belum migrasi, aplikasi akan tetap menggunakan SQLite (fallback) sesuai logika di `lib/prisma.ts`
+
+4. Jalankan aplikasi
    ```bash
    docker-compose up -d
    ```
 
-4. Inisialisasi database
+5. Inisialisasi database
    ```bash
    # Push schema ke database
    docker-compose exec app npx prisma db push
@@ -299,7 +324,7 @@ pm2 startup windows  # Jalankan sebagai Administrator
    docker-compose exec app npm run prisma:seed
    ```
 
-5. Menggunakan image versi tertentu (stabil)
+6. Menggunakan image versi tertentu (stabil)
    ```yaml
    services:
      app:
