@@ -6,7 +6,7 @@ Panduan cepat untuk menjalankan SmartOLT Management System di komputer lokal And
 
 - Node.js 20 atau lebih baru
 - npm atau yarn
-- PostgreSQL 16 (atau gunakan Docker)
+- Docker (opsional, untuk menjalankan via Compose)
 
 ## Instalasi Cepat (5 Menit)
 
@@ -22,17 +22,9 @@ cd smartolt-app
 npm install
 ```
 
-### 3. Setup Database dengan Docker (Termudah)
+### 3. Database Default: SQLite (Tanpa Postgres)
 
-```bash
-# Jalankan PostgreSQL di Docker
-docker run --name smartolt-postgres \
-  -e POSTGRES_USER=smartolt \
-  -e POSTGRES_PASSWORD=smartolt123 \
-  -e POSTGRES_DB=smartolt_db \
-  -p 5432:5432 \
-  -d postgres:16-alpine
-```
+Tidak perlu menyiapkan PostgreSQL untuk development. Secara default aplikasi menggunakan SQLite dengan file lokal `prisma/dev.db`.
 
 ### 4. Setup Environment
 
@@ -43,13 +35,13 @@ cp .env.example .env
 # File .env sudah siap digunakan untuk development
 ```
 
-### 5. Setup Database Schema
+### 5. Setup Database Schema (SQLite)
 
 ```bash
 # Generate Prisma client
 npx prisma generate
 
-# Push schema ke database
+# Sinkronkan schema ke SQLite
 npx prisma db push
 ```
 
@@ -63,7 +55,7 @@ npm install -g tsx
 npm run prisma:seed
 ```
 
-### 7. Jalankan Development Server
+### 7. Jalankan Development Server (Tanpa Docker)
 
 ```bash
 npm run dev
@@ -117,10 +109,10 @@ npx prisma studio        # Open Prisma Studio GUI
 npx prisma db push       # Push schema changes
 npm run prisma:seed      # Seed database
 
-# Docker (Production)
-docker-compose up -d     # Start all services
-docker-compose down      # Stop all services
-docker-compose logs -f   # View logs
+# Docker (Production - SQLite default)
+docker-compose -f docker-compose.prod.yml up -d   # Start prod services
+docker-compose -f docker-compose.prod.yml down    # Stop prod services
+docker-compose -f docker-compose.prod.yml logs -f # View logs
 ```
 
 ## 🐛 Troubleshooting
@@ -135,13 +127,10 @@ npm run dev -- -p 3001
 ### Database connection error?
 
 ```bash
-# Check PostgreSQL status
-docker ps
-
-# Restart PostgreSQL
-docker restart smartolt-postgres
-
-# Check .env file - pastikan DATABASE_URL benar
+# Pastikan `DATABASE_URL` mengarah ke file SQLite yang valid
+# Default development: DATABASE_URL="file:./prisma/dev.db"
+# Gunakan Prisma Studio untuk verifikasi
+npx prisma studio
 ```
 
 ### Dependencies error?

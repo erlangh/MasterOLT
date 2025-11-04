@@ -34,28 +34,16 @@ exit
 
 ```bash
 # Generate, push schema, dan seed
-docker-compose exec app npx prisma generate
-docker-compose exec app npx prisma db push
-docker-compose exec app npm run prisma:seed
+docker-compose -f docker-compose.prod.yml exec app npx prisma generate
+docker-compose -f docker-compose.prod.yml exec app npx prisma db push
+docker-compose -f docker-compose.prod.yml exec app npm run prisma:seed
 ```
 
-### Verifikasi Database
+### Verifikasi Database (SQLite)
 
 ```bash
-# Cek apakah tabel sudah dibuat
-docker-compose exec postgres psql -U smartolt -d smartolt_db -c "\dt"
-
-# Output yang diharapkan:
-#           List of relations
-#  Schema |        Name        | Type  |  Owner   
-# --------+--------------------+-------+----------
-#  public | ActivityLog        | table | smartolt
-#  public | Alarm              | table | smartolt
-#  public | ONT                | table | smartolt
-#  public | OLT                | table | smartolt
-#  public | Report             | table | smartolt
-#  public | SystemConfig       | table | smartolt
-#  public | User               | table | smartolt
+# Gunakan Prisma Studio untuk melihat tabel dan data
+npx prisma studio
 ```
 
 ## After Setup
@@ -82,32 +70,31 @@ Setelah setup berhasil, coba akses aplikasi:
 ### Error: Connection refused
 
 ```bash
-# Cek status containers
-docker-compose ps
+# Cek status containers (Compose prod)
+docker-compose -f docker-compose.prod.yml ps
 
-# Pastikan postgres dan app running
-# Status harus "Up"
+# Pastikan service app status "Up"
 ```
 
 ### Error: Database does not exist
 
 ```bash
-# Buat database manual
-docker-compose exec postgres psql -U smartolt -c "CREATE DATABASE smartolt_db;"
+# Pastikan path DATABASE_URL benar dan file SQLite dapat diakses
+# Contoh (development): DATABASE_URL="file:./prisma/dev.db"
 ```
 
 ### Reset Database (Hati-hati! Menghapus semua data)
 
 ```bash
-# Stop containers
-docker-compose down -v
+# Stop containers (Compose prod)
+docker-compose -f docker-compose.prod.yml down -v
 
 # Start fresh
-docker-compose up -d
+docker-compose -f docker-compose.prod.yml up -d
 
 # Setup database lagi
-docker-compose exec app npx prisma db push
-docker-compose exec app npm run prisma:seed
+docker-compose -f docker-compose.prod.yml exec app npx prisma db push
+docker-compose -f docker-compose.prod.yml exec app npm run prisma:seed
 ```
 
 ### Prisma Studio (GUI untuk Database)
@@ -121,11 +108,11 @@ npx prisma studio
 # Atau port forward dari VPS
 ssh -L 5555:localhost:5555 user@vps-ip
 # Lalu di VPS:
-docker-compose exec app npx prisma studio
+docker-compose -f docker-compose.prod.yml exec app npx prisma studio
 # Akses di browser: http://localhost:5555
 ```
 
-## Database Backup
+## Database Backup (PostgreSQL - Opsional)
 
 ```bash
 # Backup database
@@ -141,13 +128,10 @@ Jika masih error setelah setup:
 
 ```bash
 # Logs aplikasi
-docker-compose logs -f app
-
-# Logs database
-docker-compose logs -f postgres
+docker-compose -f docker-compose.prod.yml logs -f app
 
 # Logs semua services
-docker-compose logs -f
+docker-compose -f docker-compose.prod.yml logs -f
 ```
 
 ## Windows + SQLite (Local Development)
