@@ -249,6 +249,70 @@ pm2 startup windows  # Jalankan sebagai Administrator
 - Review logs: `pm2 logs smart-olt --lines 50`
 - Monitor disk space untuk logs dan backups
 
+---
+
+## Deployment dengan Docker Compose (Production)
+
+### Prasyarat
+- Docker dan Docker Compose terinstall
+- Akses ke GitHub Container Registry (GHCR) untuk menarik image
+
+### Langkah-langkah
+1. Siapkan environment file
+   ```bash
+   cp .env.example .env
+   # Edit .env sesuai kebutuhan production
+   ```
+
+2. Gunakan image dari GHCR di `docker-compose.yml` (ganti blok `build:` dengan `image:` jika perlu)
+   ```yaml
+   services:
+     app:
+       image: ghcr.io/erlangh/smartolt-app:latest
+       container_name: smartolt-app
+       restart: always
+       ports:
+         - "3000:3000"
+       environment:
+         DATABASE_URL: "postgresql://smartolt:smartolt123@postgres:5432/smartolt_db?schema=public"
+         NEXTAUTH_URL: "http://localhost:3000"
+         NEXTAUTH_SECRET: "your-secret-key-change-this-in-production-min-32-chars"
+         NODE_ENV: "production"
+       depends_on:
+         postgres:
+           condition: service_started
+       networks:
+         - smartolt-network
+   ```
+
+3. Jalankan aplikasi
+   ```bash
+   docker-compose up -d
+   ```
+
+4. Inisialisasi database
+   ```bash
+   # Push schema ke database
+   docker-compose exec app npx prisma db push
+
+   # Seed data default
+   docker-compose exec app npm run prisma:seed
+   ```
+
+5. Menggunakan image versi tertentu (stabil)
+   ```yaml
+   services:
+     app:
+       image: ghcr.io/erlangh/smartolt-app:v1.0.0
+       # konfigurasi lainnya sama seperti di atas
+   ```
+
+### Troubleshooting (Docker)
+- Cek logs container: `docker-compose logs -f app`
+- Cek kesehatan service: `docker ps` dan `docker inspect <container>`
+- Pastikan network Compose aktif: `docker network ls`
+
+
 ### Weekly Tasks
 - Backup database manual
 - Review dan cleanup old logs
