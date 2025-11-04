@@ -348,6 +348,51 @@ pm2 startup windows  # Jalankan sebagai Administrator
 - Update aplikasi ke versi terbaru
 - Audit security settings
 
+## Operational Tips
+
+### Healthcheck & Readiness
+- Gunakan endpoint `GET /api/health` sebagai sumber kebenaran status aplikasi sebelum menerima traffic.
+- Docker Compose sudah memiliki healthcheck aktif; untuk PM2, gunakan reverse proxy atau monitoring eksternal untuk gating traffic ke instance yang sehat.
+- Setelah deploy, verifikasi manual: `curl http://localhost:3000/api/health` (sesuaikan port/host).
+
+### Backup & Recovery (SQLite default)
+- Jalankan backup harian menggunakan `scripts/backup-database.ps1` dengan retensi yang disesuaikan (contoh: 14 hari).
+- Simpan salinan backup ke lokasi terpisah (NAS/cloud) untuk ketahanan bencana.
+- Uji proses restore secara berkala agar memastikan backup valid dan dapat dipakai.
+
+### Security Hardening
+- Firewall: izinkan hanya port yang diperlukan. Jika memakai reverse proxy, batasi akses langsung ke port aplikasi (`3000/3001`).
+- Ganti kredensial default dan rotasi `NEXTAUTH_SECRET` secara berkala pada produksi.
+- Jalankan layanan di akun non-administrator dan batasi permission file `prisma/dev.db` hanya untuk user layanan.
+
+### Logging & Monitoring
+- Pastikan `pm2-logrotate` aktif dengan retensi yang wajar dan kompresi untuk mengendalikan ukuran log.
+- Monitor CPU/memori dengan `pm2 monit`; tambah alert eksternal (mis. UptimeRobot, Healthchecks.io) untuk downtime.
+- Review penggunaan disk secara rutin pada folder logs dan backups.
+
+### Upgrades dengan Minim Downtime
+- PM2: gunakan cluster mode (`instances: 2`) untuk rolling restarts dan menjaga ketersediaan.
+- Docker Compose: lakukan `docker compose pull` lalu `docker compose up -d` untuk memperbarui image sambil mempertahankan volume data.
+- Setelah upgrade, pastikan healthcheck kembali `OK` sebelum membuka traffic penuh.
+
+### Secrets & Environment
+- Simpan konfigurasi produksi di file terpisah (mis. `.env.production`) dan jangan dikomit.
+- Kelola secrets lewat OS/CI/CD (mis. GitHub Actions Secrets) jika otomatisasi digunakan.
+- Hindari menyimpan secrets langsung di `ecosystem.config.js`; gunakan environment variables.
+
+### Konsistensi Environment & Prisma
+- Pastikan `DATABASE_URL` sesuai dengan konteks eksekusi (Windows path vs path di dalam container).
+- Setelah perubahan schema, jalankan `npx prisma generate` dan `npx prisma db push` sebelum deploy.
+
+### Reverse Proxy & TLS
+- Gunakan Nginx/IIS untuk terminasi TLS; arahkan traffic ke aplikasi (`localhost:3000/3001`).
+- Konfigurasikan caching untuk static assets (`.next/static`) dan timeout yang sesuai.
+
+### Disaster Recovery
+- Dokumentasikan langkah pemulihan layanan dan lokasi backup.
+- Simpan salinan konfigurasi (Compose, PM2, reverse proxy) dan skrip operasional.
+- Lakukan simulasi pemulihan secara berkala untuk mempercepat MTTR saat insiden.
+
 ## Kontak Support
 
 Untuk masalah deployment atau konfigurasi, dokumentasikan:
