@@ -23,7 +23,8 @@ COPY . .
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV SKIP_ENV_VALIDATION=1
-ENV DATABASE_URL="postgresql://smartolt:smartolt123@localhost:5432/smartolt_db?schema=public"
+# Gunakan SQLite sebagai default, selaras dengan schema.prisma
+ENV DATABASE_URL="file:/app/prisma/dev.db"
 
 # Build Next.js application
 RUN npm run build

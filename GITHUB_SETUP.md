@@ -1,4 +1,4 @@
-# 🚀 Setup dari GitHub Repository
+# 🚀 Setup dari GitHub Repository (smartolt-app)
 
 ## 📦 Clone Repository
 
@@ -6,8 +6,8 @@
 
 ```bash
 # Clone repository
-git clone https://github.com/erlangh/MasterOLT.git
-cd MasterOLT
+git clone https://github.com/erlangh/smartolt-app.git
+cd smartolt-app
 
 # Install dependencies
 npm install
@@ -15,15 +15,18 @@ npm install
 # Copy environment file
 copy .env.example .env
 
-# Start PostgreSQL dengan Docker
-docker run --name smartolt-postgres ^
-  -e POSTGRES_USER=smartolt ^
-  -e POSTGRES_PASSWORD=smartolt123 ^
-  -e POSTGRES_DB=smartolt_db ^
-  -p 5432:5432 ^
-  -d postgres:16-alpine
+:: Opsi A (Default): SQLite — tidak perlu Postgres
+:: Langsung generate dan push schema
 
-# Setup database
+:: Opsi B (PostgreSQL): Jika ingin pakai Postgres
+:: docker run --name smartolt-postgres ^
+::   -e POSTGRES_USER=smartolt ^
+::   -e POSTGRES_PASSWORD=smartolt123 ^
+::   -e POSTGRES_DB=smartolt_db ^
+::   -p 5432:5432 ^
+::   -d postgres:16-alpine
+
+:: Setup database (SQLite default)
 npx prisma generate
 npx prisma db push
 
@@ -37,9 +40,8 @@ npm run dev
 ### Di Komputer Lokal (Linux/Mac)
 
 ```bash
-# Clone repository
-git clone https://github.com/erlangh/MasterOLT.git
-cd MasterOLT
+git clone https://github.com/erlangh/smartolt-app.git
+cd smartolt-app
 
 # Install dependencies
 npm install
@@ -47,15 +49,16 @@ npm install
 # Copy environment file
 cp .env.example .env
 
-# Start PostgreSQL dengan Docker
-docker run --name smartolt-postgres \
-  -e POSTGRES_USER=smartolt \
-  -e POSTGRES_PASSWORD=smartolt123 \
-  -e POSTGRES_DB=smartolt_db \
-  -p 5432:5432 \
-  -d postgres:16-alpine
+## Opsi B (PostgreSQL)
+# Jika ingin pakai Postgres
+# docker run --name smartolt-postgres \
+#   -e POSTGRES_USER=smartolt \
+#   -e POSTGRES_PASSWORD=smartolt123 \
+#   -e POSTGRES_DB=smartolt_db \
+#   -p 5432:5432 \
+#   -d postgres:16-alpine
 
-# Setup database
+## Setup database (SQLite default)
 npx prisma generate
 npx prisma db push
 
@@ -94,9 +97,8 @@ sudo apt install git -y
 ### 3. Clone Repository
 
 ```bash
-# Clone ke directory /opt
 cd /opt
-sudo git clone https://github.com/erlangh/MasterOLT.git smartolt
+sudo git clone https://github.com/erlangh/smartolt-app.git smartolt
 cd smartolt
 
 # Set permissions
@@ -111,9 +113,9 @@ cp .env.example .env
 nano .env
 ```
 
-Update konfigurasi:
+Update konfigurasi (SQLite default):
 ```env
-DATABASE_URL="postgresql://smartolt:YourStrongPassword@postgres:5432/smartolt_db?schema=public"
+DATABASE_URL="file:./prisma/dev.db"
 NEXTAUTH_URL="http://your-domain.com"  # atau http://your-vps-ip:3000
 NEXTAUTH_SECRET="generate-32-char-random-string"
 NODE_ENV="production"
@@ -124,16 +126,20 @@ Generate NEXTAUTH_SECRET:
 openssl rand -base64 32
 ```
 
-### 5. Update docker-compose.yml
+### 5. Menjalankan dengan Docker Compose
 
 ```bash
 nano docker-compose.yml
 ```
 
-Update password database sesuai .env:
-```yaml
-environment:
-  POSTGRES_PASSWORD: YourStrongPassword  # Sama dengan di .env
+Opsi A (default SQLite, menarik image dari GHCR):
+```bash
+docker-compose -f docker-compose.prod.yml up -d
+```
+
+Opsi B (PostgreSQL):
+```bash
+docker-compose up -d --build
 ```
 
 ### 6. Deploy dengan Docker
@@ -145,11 +151,9 @@ docker-compose up -d --build
 # Wait for containers
 sleep 10
 
-# Setup database
-docker-compose exec app npx prisma db push
-
-# Seed database
-docker-compose exec app npm run prisma:seed
+## Setup database (pertama kali)
+docker-compose -f docker-compose.prod.yml exec app npx prisma db push
+docker-compose -f docker-compose.prod.yml exec app npm run prisma:seed
 ```
 
 ### 7. Verify Deployment
@@ -243,9 +247,9 @@ cd /opt/smartolt
 # Pull latest changes
 git pull origin main
 
-# Rebuild and restart
+## Rebuild dan restart
 docker-compose down
-docker-compose up -d --build
+docker-compose -f docker-compose.prod.yml up -d
 
 # Run migrations if needed
 docker-compose exec app npx prisma db push
@@ -328,3 +332,7 @@ sudo chmod -R 755 /opt/smartolt
 ---
 
 **Selamat menggunakan SmartOLT Management System!** 🎉
+# Run migrations if needed
+#
+## Alternatif: Tarik image dari GHCR tanpa build lokal
+docker pull ghcr.io/erlangh/smartolt-app:latest
