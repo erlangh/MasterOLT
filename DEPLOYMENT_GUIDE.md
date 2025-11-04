@@ -257,6 +257,13 @@ pm2 startup windows  # Jalankan sebagai Administrator
 - Docker dan Docker Compose terinstall
 - Akses ke GitHub Container Registry (GHCR) untuk menarik image
 
+### Login GHCR (Jika Paket Private)
+Jika image di GHCR tidak publik, login dengan Personal Access Token (scope `read:packages`):
+```bash
+echo <GHCR_PAT> | docker login ghcr.io -u <github_username> --password-stdin
+docker pull ghcr.io/erlangh/smartolt-app:latest
+```
+
 ### Langkah-langkah
 1. Siapkan environment file
    ```bash
@@ -314,6 +321,23 @@ pm2 startup windows  # Jalankan sebagai Administrator
    - Saat ini `schema.prisma` menggunakan `provider = "sqlite"`
    - Untuk benar-benar menggunakan PostgreSQL, perlu migrasi skema dan mengganti provider Prisma ke `postgresql`
    - Jika belum migrasi, aplikasi akan tetap menggunakan SQLite (fallback) sesuai logika di `lib/prisma.ts`
+
+4. Opsi C: Build Lokal (Tanpa GHCR)
+
+Jika tidak bisa login GHCR atau ingin segera jalan tanpa registry, gunakan file `docker-compose.localbuild.yml` untuk membangun image lokal dari `Dockerfile` di repo.
+
+Langkah:
+```bash
+# Siapkan volume SQLite
+mkdir -p ./data && touch ./data/dev.db
+
+# Build dan jalankan
+docker-compose -f docker-compose.localbuild.yml up -d --build --force-recreate
+
+# Inisialisasi database (pertama kali)
+docker-compose -f docker-compose.localbuild.yml exec app npx prisma db push
+docker-compose -f docker-compose.localbuild.yml exec app npm run prisma:seed
+```
 
 4. Jalankan aplikasi
    ```bash
