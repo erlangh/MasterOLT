@@ -273,8 +273,13 @@ pm2 startup windows  # Jalankan sebagai Administrator
 
    Ini akan:
    - Menjalankan container menggunakan image dari GHCR
-   - Menggunakan SQLite (`prisma/dev.db`) dengan volume host `./data/dev.db`
+   - Menggunakan SQLite (`/app/prisma/dev.db`) dengan volume host direktori `./data`
    - Mengaktifkan healthcheck ke endpoint `/api/health`
+
+   Persiapan volume (disarankan sebelum `up`):
+   ```bash
+   mkdir -p ./data && touch ./data/dev.db
+   ```
 
    Inisialisasi database (pertama kali):
    ```bash
