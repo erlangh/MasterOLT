@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import { prisma } from '@/lib/prisma'
+import { z } from 'zod'
 import bcrypt from 'bcryptjs'
 
 export async function GET(
@@ -57,7 +58,27 @@ export async function PUT(
     }
 
     const body = await request.json()
-    const { email, name, password, role, status } = body
+
+    const updateSchema = z.object({
+      email: z.string().email().optional(),
+      name: z.string().min(2, 'Name must be at least 2 characters').optional(),
+      password: z
+        .string()
+        .min(8, 'Password must be at least 8 characters')
+        .optional(),
+      role: z.enum(['ADMIN', 'OPERATOR', 'VIEWER']).optional(),
+      status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED']).optional(),
+    })
+
+    const parsed = updateSchema.safeParse(body)
+    if (!parsed.success) {
+      return NextResponse.json(
+        { error: 'Invalid input', details: parsed.error.flatten() },
+        { status: 400 }
+      )
+    }
+
+    const { email, name, password, role, status } = parsed.data
 
     // Check if user exists
     const existingUser = await prisma.user.findUnique({
@@ -69,7 +90,7 @@ export async function PUT(
     }
 
     // Prepare update data
-    const updateData: any = {}
+    const updateData: Record<string, unknown> = {}
 
     if (name) updateData.name = name
     if (email) {
@@ -95,6 +116,13 @@ export async function PUT(
     // Hash password if provided
     if (password) {
       updateData.password = await bcrypt.hash(password, 12)
+    }
+
+    if (Object.keys(updateData).length === 0) {
+      return NextResponse.json(
+        { error: 'No valid fields to update' },
+        { status: 400 }
+      )
     }
 
     const user = await prisma.user.update({
